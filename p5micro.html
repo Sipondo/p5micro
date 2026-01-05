@@ -27,23 +27,20 @@
             background: none transparent;
         }
 
-        /* Hide editor mode */
-        .hide-editor .editor-pane {
+        /* View mode - hide editor and center preview */
+        .view-mode .editor-pane {
             display: none;
         }
-        .hide-editor .container {
-            display: inline-flex;
-            width: auto;
-            height: auto;
+        .view-mode .container {
+            display: flex;
+            width: 100%;
+            height: 100%;
             gap: 0;
             padding: 0;
+            align-items: center;
+            justify-content: center;
         }
-        .hide-editor body {
-            display: flex;
-            align-items: flex-start;
-            justify-content: flex-start;
-        }
-        .hide-editor .preview-pane {
+        .view-mode .preview-pane {
             padding: 0;
             border: none;
             box-shadow: none;
@@ -152,7 +149,7 @@
             width: auto;
             height: auto;
             line-height: 0;
-            transform: scale(0.65);
+            transform: scale(var(--p5-scale, 0.65));
             transform-origin: top left;
             position: relative;
         }
@@ -223,9 +220,15 @@
 
     <script>
         const params = new URLSearchParams(window.location.search);
-        const hideEditor = params.has('hideEditor') && !['0','false','no'].includes((params.get('hideEditor') || '').toLowerCase());
-        if (hideEditor) {
-            document.body.classList.add('hide-editor');
+        const viewModeParam = params.get('viewMode');
+        let viewMode = null;
+        if (viewModeParam) {
+            const scale = parseFloat(viewModeParam);
+            if (!isNaN(scale) && scale > 0) {
+                viewMode = scale;
+                document.body.classList.add('view-mode');
+                document.documentElement.style.setProperty('--p5-scale', scale);
+            }
         }
 
         // Initialize CodeMirror
@@ -318,7 +321,7 @@ function draw() {
             try {
                 // Parse and execute user code in a new p5 instance
                 currentSketch = new p5((p) => {
-                    const scale = 0.65;
+                    const scale = viewMode || 0.65;
                     
                     // Store internal mouse coordinates
                     let _mouseX = 0, _mouseY = 0, _pmouseX = 0, _pmouseY = 0;
