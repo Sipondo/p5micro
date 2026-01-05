@@ -213,14 +213,9 @@
 <body>
     <div class="container">
         <div class="editor-pane">
-            <div class="editor-header">
-                <span>Code Editor</span>
-                <button class="run-button" onclick="runCode()">▶ Run (Ctrl+Enter)</button>
-            </div>
             <textarea id="code-editor"></textarea>
         </div>
         <div class="preview-pane">
-            <div class="preview-header">Preview</div>
             <div class="preview-content">
                 <div id="p5-container"></div>
                 <div id="error-overlay" class="error-overlay"></div>
@@ -269,6 +264,7 @@ function draw() {
 
         // P5.js sketch management
         let currentSketch = null;
+        let autoRunTimeout = null;
         const errorOverlay = document.getElementById('error-overlay');
 
         function showError(message) {
@@ -328,6 +324,12 @@ function draw() {
                 showError('Syntax Error: ' + err.message);
             }
         }
+
+        // Auto-run 2s after typing stops
+        editor.on('change', () => {
+            clearTimeout(autoRunTimeout);
+            autoRunTimeout = setTimeout(runCode, 2000);
+        });
 
         // Run code on load
         setTimeout(runCode, 100);
