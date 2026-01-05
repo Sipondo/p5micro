@@ -1,2 +1,2 @@
 # p5micro
-A minimal p5 editor for embedding.
+A minimal p5 editor for embedding in reveal.js presentations.
