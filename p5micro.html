@@ -271,24 +271,23 @@ function draw() {
             try {
                 // Parse and execute user code in a new p5 instance
                 currentSketch = new p5((p) => {
-                    // Store original mouse properties
-                    const _mouseX = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(p), 'mouseX');
-                    const _mouseY = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(p), 'mouseY');
                     const scale = 0.5;
-                    
-                    // Override mouseX and mouseY to account for scaling
-                    Object.defineProperty(p, 'mouseX', {
-                        get: function() { return _mouseX.get.call(this) / scale; },
-                        configurable: true
-                    });
-                    Object.defineProperty(p, 'mouseY', {
-                        get: function() { return _mouseY.get.call(this) / scale; },
-                        configurable: true
-                    });
                     
                     // Create a wrapper function that provides p5 functions as local variables
                     const wrappedCode = `
                         with (p) {
+                            // Override mouseX and mouseY for scaled canvas
+                            const _origMouseX = p.mouseX;
+                            const _origMouseY = p.mouseY;
+                            Object.defineProperty(window, 'mouseX', {
+                                get: () => p.mouseX / ${scale},
+                                configurable: true
+                            });
+                            Object.defineProperty(window, 'mouseY', {
+                                get: () => p.mouseY / ${scale},
+                                configurable: true
+                            });
+                            
                             ${userCode}
                             if (typeof setup !== 'undefined') p.setup = setup;
                             if (typeof draw !== 'undefined') p.draw = draw;
