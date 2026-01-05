@@ -196,30 +196,33 @@ function draw() {
         function runCode() {
             clearError();
             
-            // Remove existing canvas
-            const container = document.getElementById('p5-container');
-            container.innerHTML = '';
-            
-            // Remove old sketch
+            // Completely remove old sketch instance
             if (currentSketch) {
                 currentSketch.remove();
                 currentSketch = null;
             }
 
+            // Clear container
+            const container = document.getElementById('p5-container');
+            container.innerHTML = '';
+
             // Get user code
             const userCode = editor.getValue();
 
             try {
-                currentSketch = new p5((p) => {
-                    try {
-                        // Create a function with user code that has access to p5 methods
-                        const userSketch = new Function('p', userCode);
-                        userSketch.call(p, p);
-                    } catch (err) {
-                        console.error('Sketch execution error:', err);
-                        showError('Execution Error: ' + err.message);
-                    }
-                }, 'p5-container');
+                // Small delay to ensure DOM is ready
+                setTimeout(() => {
+                    currentSketch = new p5((p) => {
+                        try {
+                            // Create a function with user code that has access to p5 methods
+                            const userSketch = new Function('p', userCode);
+                            userSketch.call(p, p);
+                        } catch (err) {
+                            console.error('Sketch execution error:', err);
+                            showError('Execution Error: ' + err.message);
+                        }
+                    }, 'p5-container');
+                }, 50);
 
             } catch (err) {
                 console.error('Code parsing error:', err);
@@ -234,11 +237,11 @@ function draw() {
         });
 
         // Auto-run on code change (debounced)
-        let autoRunTimeout;
-        editor.on('change', () => {
-            clearTimeout(autoRunTimeout);
-            autoRunTimeout = setTimeout(runCode, 1000);
-        });
+        // let autoRunTimeout;
+        // editor.on('change', () => {
+        //     clearTimeout(autoRunTimeout);
+        //     autoRunTimeout = setTimeout(runCode, 1000);
+        // });
     </script>
 </body>
 </html>
