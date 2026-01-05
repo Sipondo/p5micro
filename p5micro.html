@@ -210,23 +210,28 @@ function draw() {
             const userCode = editor.getValue();
 
             try {
-                // Create new p5 sketch
-                const sketchFunction = new Function('p', `
-                    with(p) {
-                        ${userCode}
-                    }
-                `);
-
-                // Ensure container exists and is ready
-                const container = document.getElementById('p5-container');
-                if (!container) {
-                    showError('Error: p5 container not found');
-                    return;
-                }
-
                 currentSketch = new p5((p) => {
                     try {
-                        sketchFunction(p);
+                        // Create sketch function with p5 context
+                        const sketchFunction = new Function(
+                            'createCanvas', 'background', 'fill', 'circle', 'mouseX', 'mouseY',
+                            'textAlign', 'text', 'width', 'height', 'line', 'rect', 'ellipse',
+                            'stroke', 'strokeWeight', 'noStroke', 'noFill', 'color', 'random',
+                            'sin', 'cos', 'sqrt', 'pow', 'abs', 'floor', 'ceil', 'round',
+                            'map', 'constrain', 'dist', 'atan2', 'PI', 'TWO_PI',
+                            'setup', 'draw', 'keyPressed', 'mousePressed',
+                            userCode
+                        );
+                        
+                        // Call with p5 functions bound to p context
+                        sketchFunction(
+                            p.createCanvas, p.background, p.fill, p.circle, p.mouseX, p.mouseY,
+                            p.textAlign, p.text, p.width, p.height, p.line, p.rect, p.ellipse,
+                            p.stroke, p.strokeWeight, p.noStroke, p.noFill, p.color, p.random,
+                            p.sin, p.cos, p.sqrt, p.pow, p.abs, p.floor, p.ceil, p.round,
+                            p.map, p.constrain, p.dist, p.atan2, p.PI, p.TWO_PI,
+                            p.setup, p.draw, p.keyPressed, p.mousePressed
+                        );
                     } catch (err) {
                         console.error('Sketch execution error:', err);
                         showError('Execution Error: ' + err.message);
