@@ -271,7 +271,7 @@ function draw() {
             try {
                 // Parse and execute user code in a new p5 instance
                 currentSketch = new p5((p) => {
-                    const scale = 1.0;
+                    const scale = 0.5;
                     
                     // Create a wrapper function that provides p5 functions as local variables
                     const wrappedCode = `
@@ -280,11 +280,11 @@ function draw() {
                             const _origMouseX = p.mouseX;
                             const _origMouseY = p.mouseY;
                             Object.defineProperty(window, 'mouseX', {
-                                get: () => p.mouseX / ${scale},
+                                get: () => p.mouseX / 1.0,
                                 configurable: true
                             });
                             Object.defineProperty(window, 'mouseY', {
-                                get: () => p.mouseY / ${scale},
+                                get: () => p.mouseY / 1.0,
                                 configurable: true
                             });
                             
