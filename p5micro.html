@@ -102,7 +102,7 @@
             border-radius: 6px;
             overflow: visible;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            padding: 0;
+            padding: 12px;
             align-self: flex-start;
         }
 
@@ -297,6 +297,15 @@ function draw() {
                                 wrapper.style.height = (canvas.height * scale) + 'px';
                             }
                         }, 50);
+                        
+                        // Fix mouse coordinates for scaled canvas
+                        const scale = 0.5;
+                        Object.defineProperty(p, 'mouseX', {
+                            get: () => p.winMouseX / scale
+                        });
+                        Object.defineProperty(p, 'mouseY', {
+                            get: () => p.winMouseY / scale
+                        });
                     } catch (err) {
                         console.error('Sketch execution error:', err);
                         showError('Execution Error: ' + err.message);
