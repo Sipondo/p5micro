@@ -32,8 +32,22 @@
             display: none;
         }
         .hide-editor .container {
+            display: inline-flex;
+            width: auto;
+            height: auto;
             gap: 0;
-            padding: 20px 20px 20px 0;
+            padding: 0;
+        }
+        .hide-editor body {
+            display: flex;
+            align-items: flex-start;
+            justify-content: flex-start;
+        }
+        .hide-editor .preview-pane {
+            padding: 0;
+            border: none;
+            box-shadow: none;
+            background: transparent;
         }
 
         .container {
