@@ -386,7 +386,7 @@ function draw() {
         // Auto-run 2s after typing stops
         editor.on('change', () => {
             clearTimeout(autoRunTimeout);
-            autoRunTimeout = setTimeout(runCode, 2000);
+            autoRunTimeout = setTimeout(runCode, 1000);
         });
 
         // Load initial code (from ?src=...) then run once
