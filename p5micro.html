@@ -212,29 +212,21 @@ function draw() {
             try {
                 // Parse and execute user code in a new p5 instance
                 currentSketch = new p5((p) => {
-                    // Make all p5 functions/properties available globally within this scope
-                    for (let key in p) {
-                        if (typeof p[key] === 'function') {
-                            window[key] = p[key].bind(p);
-                        } else {
-                            Object.defineProperty(window, key, {
-                                get: () => p[key],
-                                set: (val) => { p[key] = val; }
-                            });
+                    // Create a wrapper function that provides p5 functions as local variables
+                    const wrappedCode = `
+                        with (p) {
+                            ${userCode}
+                            if (typeof setup !== 'undefined') p.setup = setup;
+                            if (typeof draw !== 'undefined') p.draw = draw;
+                            if (typeof mousePressed !== 'undefined') p.mousePressed = mousePressed;
+                            if (typeof keyPressed !== 'undefined') p.keyPressed = keyPressed;
+                            if (typeof mouseMoved !== 'undefined') p.mouseMoved = mouseMoved;
+                            if (typeof mouseClicked !== 'undefined') p.mouseClicked = mouseClicked;
                         }
-                    }
+                    `;
                     
                     try {
-                        // Execute user code
-                        eval(userCode);
-                        
-                        // If setup/draw were defined, assign them to p
-                        if (typeof setup !== 'undefined') p.setup = setup;
-                        if (typeof draw !== 'undefined') p.draw = draw;
-                        if (typeof mousePressed !== 'undefined') p.mousePressed = mousePressed;
-                        if (typeof keyPressed !== 'undefined') p.keyPressed = keyPressed;
-                        if (typeof mouseMoved !== 'undefined') p.mouseMoved = mouseMoved;
-                        if (typeof mouseClicked !== 'undefined') p.mouseClicked = mouseClicked;
+                        eval(wrappedCode);
                     } catch (err) {
                         console.error('Sketch execution error:', err);
                         showError('Execution Error: ' + err.message);
