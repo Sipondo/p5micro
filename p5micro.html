@@ -114,12 +114,14 @@
             background: #fff;
             width: fit-content;
             height: fit-content;
+            vertical-align: top;
         }
 
         #p5-wrapper {
             display: inline-block;
             overflow: hidden;
             line-height: 0;
+            vertical-align: top;
         }
 
         #p5-container {
@@ -127,7 +129,7 @@
             width: auto;
             height: auto;
             line-height: 0;
-            transform: scale(0.5);
+            transform: scale(0.6);
             transform-origin: top left;
             position: relative;
         }
@@ -271,7 +273,7 @@ function draw() {
             try {
                 // Parse and execute user code in a new p5 instance
                 currentSketch = new p5((p) => {
-                    const scale = 0.5;
+                    const scale = 0.6;
                     
                     // Store internal mouse coordinates
                     let _mouseX = 0, _mouseY = 0, _pmouseX = 0, _pmouseY = 0;
