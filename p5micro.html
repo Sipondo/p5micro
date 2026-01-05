@@ -271,7 +271,7 @@ function draw() {
             try {
                 // Parse and execute user code in a new p5 instance
                 currentSketch = new p5((p) => {
-                    const scale = 0.5;
+                    const scale = 1.0;
                     
                     // Create a wrapper function that provides p5 functions as local variables
                     const wrappedCode = `
