@@ -273,15 +273,27 @@ function draw() {
                 currentSketch = new p5((p) => {
                     const scale = 0.5;
                     
-                    // Store original _updateMouseCoords to intercept and scale
-                    const originalUpdate = p._updateMouseCoords;
-                    p._updateMouseCoords = function() {
-                        originalUpdate.call(this);
-                        // Scale mouse coordinates
-                        this.mouseX = this.mouseX / scale;
-                        this.mouseY = this.mouseY / scale;
-                        this.pmouseX = this.pmouseX / scale;
-                        this.pmouseY = this.pmouseY / scale;
+                    // Store internal mouse coordinates
+                    let _mouseX = 0, _mouseY = 0, _pmouseX = 0, _pmouseY = 0;
+                    
+                    // Override the _setProperty method to intercept mouse updates
+                    const originalSetProperty = p._setProperty;
+                    p._setProperty = function(prop, value) {
+                        if (prop === 'mouseX') {
+                            _mouseX = value;
+                            originalSetProperty.call(this, prop, value / scale);
+                        } else if (prop === 'mouseY') {
+                            _mouseY = value;
+                            originalSetProperty.call(this, prop, value / scale);
+                        } else if (prop === 'pmouseX') {
+                            _pmouseX = value;
+                            originalSetProperty.call(this, prop, value / scale);
+                        } else if (prop === 'pmouseY') {
+                            _pmouseY = value;
+                            originalSetProperty.call(this, prop, value / scale);
+                        } else {
+                            originalSetProperty.call(this, prop, value);
+                        }
                     };
                     
                     // Create a wrapper function that provides p5 functions as local variables
