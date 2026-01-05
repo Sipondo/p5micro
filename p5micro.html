@@ -217,6 +217,13 @@ function draw() {
                     }
                 `);
 
+                // Ensure container exists and is ready
+                const container = document.getElementById('p5-container');
+                if (!container) {
+                    showError('Error: p5 container not found');
+                    return;
+                }
+
                 currentSketch = new p5((p) => {
                     try {
                         sketchFunction(p);
