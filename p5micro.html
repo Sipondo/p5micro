@@ -175,7 +175,7 @@ function draw() {
   text('Edit code and click Run!', width/2, 30);
 }`;
 
-        editor.setValue(starterCode);
+        // Editor starts empty, will be filled on window load
 
         // P5.js sketch management
         let currentSketch = null;
@@ -212,8 +212,9 @@ function draw() {
             try {
                 currentSketch = new p5((p) => {
                     try {
-                        // Execute user code with p5 in scope via eval
-                        eval(userCode);
+                        // Create a function with user code that has access to p5 methods
+                        const userSketch = new Function('p', userCode);
+                        userSketch.call(p, p);
                     } catch (err) {
                         console.error('Sketch execution error:', err);
                         showError('Execution Error: ' + err.message);
@@ -226,8 +227,11 @@ function draw() {
             }
         }
 
-        // Run code on load
-        runCode();
+        // Wait for p5.js to load before running code
+        window.addEventListener('load', () => {
+            editor.setValue(starterCode);
+            runCode();
+        });
 
         // Auto-run on code change (debounced)
         let autoRunTimeout;
