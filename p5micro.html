@@ -271,6 +271,21 @@ function draw() {
             try {
                 // Parse and execute user code in a new p5 instance
                 currentSketch = new p5((p) => {
+                    // Store original mouse properties
+                    const _mouseX = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(p), 'mouseX');
+                    const _mouseY = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(p), 'mouseY');
+                    const scale = 0.5;
+                    
+                    // Override mouseX and mouseY to account for scaling
+                    Object.defineProperty(p, 'mouseX', {
+                        get: function() { return _mouseX.get.call(this) / scale; },
+                        configurable: true
+                    });
+                    Object.defineProperty(p, 'mouseY', {
+                        get: function() { return _mouseY.get.call(this) / scale; },
+                        configurable: true
+                    });
+                    
                     // Create a wrapper function that provides p5 functions as local variables
                     const wrappedCode = `
                         with (p) {
@@ -292,20 +307,10 @@ function draw() {
                             const canvas = document.querySelector('#p5-container canvas');
                             const wrapper = document.getElementById('p5-wrapper');
                             if (canvas && wrapper) {
-                                const scale = 0.5;
                                 wrapper.style.width = (canvas.width * scale) + 'px';
                                 wrapper.style.height = (canvas.height * scale) + 'px';
                             }
                         }, 50);
-                        
-                        // Fix mouse coordinates for scaled canvas
-                        const scale = 0.5;
-                        Object.defineProperty(p, 'mouseX', {
-                            get: () => p.winMouseX / scale
-                        });
-                        Object.defineProperty(p, 'mouseY', {
-                            get: () => p.winMouseY / scale
-                        });
                     } catch (err) {
                         console.error('Sketch execution error:', err);
                         showError('Execution Error: ' + err.message);
