@@ -27,6 +27,15 @@
             background: none transparent;
         }
 
+        /* Hide editor mode */
+        .hide-editor .editor-pane {
+            display: none;
+        }
+        .hide-editor .container {
+            gap: 0;
+            padding: 20px 20px 20px 0;
+        }
+
         .container {
             display: flex;
             height: 100vh;
@@ -199,6 +208,12 @@
     </div>
 
     <script>
+        const params = new URLSearchParams(window.location.search);
+        const hideEditor = params.has('hideEditor') && !['0','false','no'].includes((params.get('hideEditor') || '').toLowerCase());
+        if (hideEditor) {
+            document.body.classList.add('hide-editor');
+        }
+
         // Initialize CodeMirror
         const editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
             mode: 'javascript',
@@ -237,8 +252,7 @@ function draw() {
 }`;
 
                 async function loadInitialCode() {
-                        const params = new URLSearchParams(window.location.search);
-                        const src = params.get('src');
+                    const src = params.get('src');
                         if (src) {
                                 try {
                                         const resp = await fetch(src);
