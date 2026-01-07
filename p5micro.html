@@ -393,6 +393,19 @@ function draw() {
                     try {
                         eval(wrappedCode);
                         
+                        // Enable audio context on first user interaction
+                        if (typeof getAudioContext === 'function') {
+                            const enableAudio = () => {
+                                userStartAudio();
+                                document.removeEventListener('click', enableAudio);
+                                document.removeEventListener('touchstart', enableAudio);
+                                document.removeEventListener('keydown', enableAudio);
+                            };
+                            document.addEventListener('click', enableAudio);
+                            document.addEventListener('touchstart', enableAudio);
+                            document.addEventListener('keydown', enableAudio);
+                        }
+                        
                         // Adjust wrapper size to match scaled canvas
                         setTimeout(() => {
                             const canvas = document.querySelector('#p5-container canvas');
