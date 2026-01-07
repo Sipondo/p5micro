@@ -231,6 +231,37 @@
             }
         }
 
+        // Library loading
+        const libraryMap = {
+            'sound': 'https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/addons/p5.sound.min.js'
+        };
+
+        async function loadLibraries() {
+            const libsParam = params.get('libs');
+            if (!libsParam) return;
+
+            const libs = libsParam.split(',').map(s => s.trim()).filter(Boolean);
+            const promises = libs.map(lib => {
+                const url = libraryMap[lib] || lib;
+                return new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = url;
+                    script.onload = resolve;
+                    script.onerror = () => {
+                        console.error('Failed to load library:', url);
+                        reject(new Error('Failed to load: ' + url));
+                    };
+                    document.head.appendChild(script);
+                });
+            });
+
+            try {
+                await Promise.all(promises);
+            } catch (e) {
+                console.error('Library loading error:', e);
+            }
+        }
+
         // Initialize CodeMirror
         const editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
             mode: 'javascript',
@@ -389,8 +420,10 @@ function draw() {
             autoRunTimeout = setTimeout(runCode, 1000);
         });
 
-        // Load initial code (from ?src=...) then run once
-        loadInitialCode().then(() => setTimeout(runCode, 100));
+        // Load libraries, then load initial code, then run once
+        loadLibraries()
+            .then(() => loadInitialCode())
+            .then(() => setTimeout(runCode, 100));
     </script>
 </body>
 </html>
