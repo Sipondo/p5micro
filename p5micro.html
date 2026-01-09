@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>p5.js Micro Editor</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/addons/p5.sound.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/fold/foldgutter.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"></script>
@@ -231,25 +232,20 @@
             }
         }
 
-        // Library loading
-        const libraryMap = {
-            'sound': 'https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/addons/p5.sound.min.js'
-        };
-
+        // Library loading - load additional third-party libraries if specified
         async function loadLibraries() {
             const libsParam = params.get('libs');
             if (!libsParam) return;
 
             const libs = libsParam.split(',').map(s => s.trim()).filter(Boolean);
             const promises = libs.map(lib => {
-                const url = libraryMap[lib] || lib;
                 return new Promise((resolve, reject) => {
                     const script = document.createElement('script');
-                    script.src = url;
+                    script.src = lib;
                     script.onload = resolve;
                     script.onerror = () => {
-                        console.error('Failed to load library:', url);
-                        reject(new Error('Failed to load: ' + url));
+                        console.error('Failed to load library:', lib);
+                        reject(new Error('Failed to load: ' + lib));
                     };
                     document.head.appendChild(script);
                 });
