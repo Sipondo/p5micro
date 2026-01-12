@@ -438,8 +438,24 @@ function draw() {
                             const canvas = document.querySelector('#p5-container canvas');
                             const wrapper = document.getElementById('p5-wrapper');
                             if (canvas && wrapper) {
-                                wrapper.style.width = (canvas.width * scale) + 'px';
-                                wrapper.style.height = (canvas.height * scale) + 'px';
+                                if (viewMode) {
+                                    // In view mode, calculate scale to fill container
+                                    const container = document.getElementById('p5-wrapper');
+                                    const containerWidth = window.innerWidth;
+                                    const containerHeight = window.innerHeight;
+                                    const canvasWidth = canvas.width;
+                                    const canvasHeight = canvas.height;
+                                    
+                                    const scaleX = containerWidth / canvasWidth;
+                                    const scaleY = containerHeight / canvasHeight;
+                                    const fillScale = Math.min(scaleX, scaleY);
+                                    
+                                    document.documentElement.style.setProperty('--p5-scale', fillScale);
+                                } else {
+                                    // In normal mode, adjust wrapper to match scaled canvas
+                                    wrapper.style.width = (canvas.width * scale) + 'px';
+                                    wrapper.style.height = (canvas.height * scale) + 'px';
+                                }
                             }
                         }, 50);
                     } catch (err) {
