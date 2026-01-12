@@ -433,13 +433,20 @@ function draw() {
                             document.addEventListener('keydown', enableAudio);
                         }
                         
-                        // Adjust wrapper size to match scaled canvas
+                        // Adjust sizing based on view mode
                         setTimeout(() => {
                             const canvas = document.querySelector('#p5-container canvas');
                             const wrapper = document.getElementById('p5-wrapper');
                             if (canvas && wrapper) {
-                                wrapper.style.width = (canvas.width * scale) + 'px';
-                                wrapper.style.height = (canvas.height * scale) + 'px';
+                                if (viewMode) {
+                                    // In view mode, resize canvas to fill container
+                                    const rect = wrapper.getBoundingClientRect();
+                                    p.resizeCanvas(rect.width, rect.height);
+                                } else {
+                                    // In normal mode, adjust wrapper to match scaled canvas
+                                    wrapper.style.width = (canvas.width * scale) + 'px';
+                                    wrapper.style.height = (canvas.height * scale) + 'px';
+                                }
                             }
                         }, 50);
                     } catch (err) {
