@@ -251,9 +251,20 @@
     </div>
 
     <script>
+        // Configuration
+        const CONFIG = {
+            DEFAULT_SCALE: 0.65,
+            AUTO_RUN_DELAY: 1000,
+            ERROR_DISPLAY_TIME: 5000,
+            CANVAS_INIT_DELAY: 50,
+            AUDIO_LISTENERS: ['click', 'touchstart', 'keydown']
+        };
+
+        // Parse URL parameters and initialize view mode
         const params = new URLSearchParams(window.location.search);
         const viewModeParam = params.get('viewMode');
         let viewMode = null;
+        
         if (viewModeParam) {
             const scale = parseFloat(viewModeParam);
             if (!isNaN(scale) && scale > 0) {
@@ -263,33 +274,29 @@
             }
         }
 
-        // Library loading - load additional third-party libraries if specified
+        // Load additional third-party libraries
         async function loadLibraries() {
             const libsParam = params.get('libs');
-            if (!libsParam) return;
+            if (!libsParam) return Promise.resolve();
 
             const libs = libsParam.split(',').map(s => s.trim()).filter(Boolean);
-            const promises = libs.map(lib => {
-                return new Promise((resolve, reject) => {
-                    const script = document.createElement('script');
-                    script.src = lib;
-                    script.onload = resolve;
-                    script.onerror = () => {
-                        console.error('Failed to load library:', lib);
-                        reject(new Error('Failed to load: ' + lib));
-                    };
-                    document.head.appendChild(script);
-                });
-            });
-
-            try {
-                await Promise.all(promises);
-            } catch (e) {
-                console.error('Library loading error:', e);
-            }
+            if (libs.length === 0) return Promise.resolve();
+            
+            const promises = libs.map(loadScript);
+            return Promise.allSettled(promises);
         }
 
-        // Initialize CodeMirror
+        function loadScript(src) {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = () => reject(new Error(`Failed to load library: ${src}`));
+                document.head.appendChild(script);
+            });
+        }
+
+        // Initialize CodeMirror editor
         const editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
             mode: 'javascript',
             theme: 'monokai',
@@ -302,13 +309,13 @@
             extraKeys: {
                 "Ctrl-Enter": runCode,
                 "Cmd-Enter": runCode,
-                "Ctrl-Q": function(cm) { cm.foldCode(cm.getCursor()); },
-                "Cmd-Q": function(cm) { cm.foldCode(cm.getCursor()); }
+                "Ctrl-Q": (cm) => cm.foldCode(cm.getCursor()),
+                "Cmd-Q": (cm) => cm.foldCode(cm.getCursor())
             }
         });
 
-                // Default starter code
-                const starterCode = `function setup() {
+        // Default starter code
+        const starterCode = `function setup() {
     createCanvas(800, 800);
 }
 
@@ -326,22 +333,22 @@ function draw() {
     text('Edit code and click Run!', width/2, 30);
 }`;
 
-                async function loadInitialCode() {
-                    const src = params.get('src');
-                        if (src) {
-                                try {
-                                        const resp = await fetch(src);
-                                        if (!resp.ok) throw new Error(resp.status + ' ' + resp.statusText);
-                                        const text = await resp.text();
-                                        editor.setValue(text);
-                                        return;
-                                } catch (e) {
-                                        console.warn('Failed to load src code:', e);
-                                        showError('Failed to load src: ' + e.message);
-                                }
-                        }
-                        editor.setValue(starterCode);
+        async function loadInitialCode() {
+            const src = params.get('src');
+            if (src) {
+                try {
+                    const resp = await fetch(src);
+                    if (!resp.ok) throw new Error(resp.status + ' ' + resp.statusText);
+                    const text = await resp.text();
+                    editor.setValue(text);
+                    return;
+                } catch (e) {
+                    console.warn('Failed to load src code:', e);
+                    showError('Failed to load src: ' + e.message);
                 }
+            }
+            editor.setValue(starterCode);
+        }
 
         // P5.js sketch management
         let currentSketch = null;
@@ -351,128 +358,117 @@ function draw() {
         function showError(message) {
             errorOverlay.textContent = message;
             errorOverlay.classList.add('show');
-            setTimeout(() => {
-                errorOverlay.classList.remove('show');
-            }, 5000);
+            errorOverlay.errorTimer = setTimeout(() => clearError(), CONFIG.ERROR_DISPLAY_TIME);
         }
 
         function clearError() {
+            if (errorOverlay.errorTimer) clearTimeout(errorOverlay.errorTimer);
             errorOverlay.classList.remove('show');
         }
 
         function runCode() {
             clearError();
+            destroySketch();
             
-            // Completely remove old sketch instance
-            if (currentSketch) {
-                currentSketch.remove();
-                currentSketch = null;
-            }
-
-            // Clear container
-            const container = document.getElementById('p5-container');
-            container.innerHTML = '';
-
-            // Get user code
             const userCode = editor.getValue();
+            if (!userCode.trim()) return;
 
             try {
-                // Parse and execute user code in a new p5 instance
-                currentSketch = new p5((p) => {
-                    let scale = viewMode || 0.65;
-                    
-                    // Store internal mouse coordinates
-                    let _mouseX = 0, _mouseY = 0, _pmouseX = 0, _pmouseY = 0;
-                    
-                    // Override the _setProperty method to intercept mouse updates
-                    const originalSetProperty = p._setProperty;
-                    p._setProperty = function(prop, value) {
-                        if (prop === 'mouseX') {
-                            _mouseX = value;
-                            originalSetProperty.call(this, prop, value / scale);
-                        } else if (prop === 'mouseY') {
-                            _mouseY = value;
-                            originalSetProperty.call(this, prop, value / scale);
-                        } else if (prop === 'pmouseX') {
-                            _pmouseX = value;
-                            originalSetProperty.call(this, prop, value / scale);
-                        } else if (prop === 'pmouseY') {
-                            _pmouseY = value;
-                            originalSetProperty.call(this, prop, value / scale);
-                        } else {
-                            originalSetProperty.call(this, prop, value);
-                        }
-                    };
-                    
-                    // Create a wrapper function that provides p5 functions as local variables
-                    const wrappedCode = `
-                        with (p) {
-                            ${userCode}
-                            if (typeof setup !== 'undefined') p.setup = setup;
-                            if (typeof draw !== 'undefined') p.draw = draw;
-                            if (typeof mousePressed !== 'undefined') p.mousePressed = mousePressed;
-                            if (typeof keyPressed !== 'undefined') p.keyPressed = keyPressed;
-                            if (typeof mouseMoved !== 'undefined') p.mouseMoved = mouseMoved;
-                            if (typeof mouseClicked !== 'undefined') p.mouseClicked = mouseClicked;
-                        }
-                    `;
-                    
-                    try {
-                        eval(wrappedCode);
-                        
-                        // Enable audio context on first user interaction
-                        if (typeof getAudioContext === 'function') {
-                            const enableAudio = () => {
-                                userStartAudio();
-                                document.removeEventListener('click', enableAudio);
-                                document.removeEventListener('touchstart', enableAudio);
-                                document.removeEventListener('keydown', enableAudio);
-                            };
-                            document.addEventListener('click', enableAudio);
-                            document.addEventListener('touchstart', enableAudio);
-                            document.addEventListener('keydown', enableAudio);
-                        }
-                        
-                        // Adjust wrapper size to match scaled canvas
-                        setTimeout(() => {
-                            const canvas = document.querySelector('#p5-container canvas');
-                            const wrapper = document.getElementById('p5-wrapper');
-                            if (canvas && wrapper) {
-                                if (viewMode) {
-                                    // In view mode, calculate scale to fill container
-                                    const containerWidth = window.innerWidth;
-                                    const containerHeight = window.innerHeight;
-                                    const canvasWidth = canvas.width;
-                                    const canvasHeight = canvas.height;
-                                    
-                                    const scaleX = containerWidth / canvasWidth;
-                                    const scaleY = containerHeight / canvasHeight;
-                                    scale = Math.min(scaleX, scaleY);
-                                    
-                                    document.documentElement.style.setProperty('--p5-scale', scale);
-                                } else {
-                                    // In normal mode, adjust wrapper to match scaled canvas
-                                    wrapper.style.width = (canvas.width * scale) + 'px';
-                                    wrapper.style.height = (canvas.height * scale) + 'px';
-                                }
-                            }
-                        }, 50);
-                    } catch (err) {
-                        console.error('Sketch execution error:', err);
-                        showError('Execution Error: ' + err.message);
-                    }
-                }, 'p5-container');
-
+                createSketch(userCode);
             } catch (err) {
-                console.error('Code parsing error:', err);
+                console.error('Sketch creation error:', err);
                 showError('Syntax Error: ' + err.message);
             }
         }
 
-        // Auto-run 2s after typing stops
+        function destroySketch() {
+            if (currentSketch) {
+                currentSketch.remove();
+                currentSketch = null;
+            }
+            document.getElementById('p5-container').innerHTML = '';
+        }
+
+        function createSketch(userCode) {
+            currentSketch = new p5((p) => {
+                let scale = viewMode || CONFIG.DEFAULT_SCALE;
+                
+                // Intercept mouse coordinate updates to account for scaling
+                setupMouseScaling(p, scale);
+                
+                // Execute user code in p5 context
+                executeUserCode(p, userCode);
+                initializeAudio();
+                adjustCanvasSize(scale);
+            }, 'p5-container');
+        }
+
+        function setupMouseScaling(p, scale) {
+            const originalSetProperty = p._setProperty;
+            const mouseProps = new Set(['mouseX', 'mouseY', 'pmouseX', 'pmouseY']);
+            
+            p._setProperty = function(prop, value) {
+                if (mouseProps.has(prop)) {
+                    originalSetProperty.call(this, prop, value / scale);
+                } else {
+                    originalSetProperty.call(this, prop, value);
+                }
+            };
+        }
+
+        function executeUserCode(p, userCode) {
+            const wrappedCode = `
+                with (p) {
+                    ${userCode}
+                    if (typeof setup !== 'undefined') p.setup = setup;
+                    if (typeof draw !== 'undefined') p.draw = draw;
+                    if (typeof mousePressed !== 'undefined') p.mousePressed = mousePressed;
+                    if (typeof keyPressed !== 'undefined') p.keyPressed = keyPressed;
+                    if (typeof mouseMoved !== 'undefined') p.mouseMoved = mouseMoved;
+                    if (typeof mouseClicked !== 'undefined') p.mouseClicked = mouseClicked;
+                }
+            `;
+            eval(wrappedCode);
+        }
+
+        function initializeAudio() {
+            if (typeof getAudioContext !== 'function') return;
+            
+            const enableAudio = () => {
+                userStartAudio();
+                CONFIG.AUDIO_LISTENERS.forEach(event => {
+                    document.removeEventListener(event, enableAudio);
+                });
+            };
+            
+            CONFIG.AUDIO_LISTENERS.forEach(event => {
+                document.addEventListener(event, enableAudio);
+            });
+        }
+
+        function adjustCanvasSize(scale) {
+            setTimeout(() => {
+                const canvas = document.querySelector('#p5-container canvas');
+                const wrapper = document.getElementById('p5-wrapper');
+                if (!canvas || !wrapper) return;
+
+                if (viewMode) {
+                    const scaleToFit = Math.min(
+                        window.innerWidth / canvas.width,
+                        window.innerHeight / canvas.height
+                    );
+                    document.documentElement.style.setProperty('--p5-scale', scaleToFit);
+                } else {
+                    wrapper.style.width = (canvas.width * scale) + 'px';
+                    wrapper.style.height = (canvas.height * scale) + 'px';
+                }
+            }, CONFIG.CANVAS_INIT_DELAY);
+        }
+
+        // Auto-run with debounce
         editor.on('change', () => {
             clearTimeout(autoRunTimeout);
-            autoRunTimeout = setTimeout(runCode, 1000);
+            autoRunTimeout = setTimeout(runCode, CONFIG.AUTO_RUN_DELAY);
         });
 
         // Load libraries, then load initial code, then run once
