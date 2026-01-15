@@ -407,14 +407,14 @@ function draw() {
                             const wrapper = document.getElementById('p5-wrapper');
                             if (canvas && wrapper) {
                                 if (viewMode) {
-                                    // In view mode, calculate scale to fill container
-                                    const containerWidth = window.innerWidth;
-                                    const containerHeight = window.innerHeight;
+                                    // In view mode, calculate scale to fill available space
+                                    const availableWidth = wrapper.parentElement.clientWidth;
+                                    const availableHeight = wrapper.parentElement.clientHeight;
                                     const canvasWidth = canvas.width;
                                     const canvasHeight = canvas.height;
                                     
-                                    const scaleX = containerWidth / canvasWidth;
-                                    const scaleY = containerHeight / canvasHeight;
+                                    const scaleX = availableWidth / canvasWidth;
+                                    const scaleY = availableHeight / canvasHeight;
                                     scale = Math.min(scaleX, scaleY);
                                     
                                     document.documentElement.style.setProperty('--p5-scale', scale);
@@ -424,7 +424,7 @@ function draw() {
                                     wrapper.style.height = (canvas.height * scale) + 'px';
                                 }
                             }
-                        }, 50);
+                        }, 100);
                     } catch (err) {
                         console.error('Sketch execution error:', err);
                         showError('Execution Error: ' + err.message);
