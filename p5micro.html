@@ -403,7 +403,7 @@ function draw() {
                         }
                         
                         // Adjust wrapper size to match scaled canvas
-                        setTimeout(() => {
+                        const adjustScale = () => {
                             const canvas = document.querySelector('#p5-container canvas');
                             const wrapper = document.getElementById('p5-wrapper');
                             if (canvas && wrapper) {
@@ -414,9 +414,19 @@ function draw() {
                                     const canvasWidth = canvas.width;
                                     const canvasHeight = canvas.height;
                                     
+                                    // Skip if dimensions are invalid
+                                    if (availableWidth === 0 || availableHeight === 0 || canvasWidth === 0 || canvasHeight === 0) {
+                                        return;
+                                    }
+                                    
                                     const scaleX = availableWidth / canvasWidth;
                                     const scaleY = availableHeight / canvasHeight;
                                     scale = Math.min(scaleX, scaleY);
+                                    
+                                    // Ensure scale is valid
+                                    if (!isFinite(scale) || scale <= 0) {
+                                        scale = 1;
+                                    }
                                     
                                     document.documentElement.style.setProperty('--p5-scale', scale);
                                 } else {
@@ -425,7 +435,21 @@ function draw() {
                                     wrapper.style.height = (canvas.height * scale) + 'px';
                                 }
                             }
-                        }, 100);
+                        };
+                        
+                        // Set up ResizeObserver to recalculate scale when container size changes
+                        if (viewMode) {
+                            const wrapper = document.getElementById('p5-wrapper');
+                            if (wrapper && wrapper.parentElement) {
+                                const resizeObserver = new ResizeObserver(() => {
+                                    adjustScale();
+                                });
+                                resizeObserver.observe(wrapper.parentElement);
+                            }
+                        }
+                        
+                        // Initial calculation
+                        setTimeout(() => adjustScale(), 100);
                     } catch (err) {
                         console.error('Sketch execution error:', err);
                         showError('Execution Error: ' + err.message);
