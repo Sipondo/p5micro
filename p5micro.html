@@ -448,8 +448,14 @@ function draw() {
                             }
                         }
                         
-                        // Initial calculation
-                        setTimeout(() => adjustScale(), 100);
+                        // Initial calculation with multiple attempts for iframe timing issues
+                        const performInitialCalculation = () => {
+                            adjustScale();
+                            // Force recalculation on next frame to ensure dimensions are settled
+                            requestAnimationFrame(() => adjustScale());
+                        };
+                        
+                        setTimeout(() => performInitialCalculation(), 100);
                     } catch (err) {
                         console.error('Sketch execution error:', err);
                         showError('Execution Error: ' + err.message);
