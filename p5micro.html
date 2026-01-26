@@ -407,12 +407,16 @@ function draw() {
                             const canvas = document.querySelector('#p5-container canvas');
                             const wrapper = document.getElementById('p5-wrapper');
                             if (canvas && wrapper) {
+                                // Account for DPI scaling on secondary monitors
+                                const dpr = window.devicePixelRatio || 1;
+                                
                                 if (viewMode) {
                                     // In view mode, calculate scale to fill available space
                                     const availableWidth = wrapper.parentElement.clientWidth;
                                     const availableHeight = wrapper.parentElement.clientHeight;
-                                    const canvasWidth = canvas.width;
-                                    const canvasHeight = canvas.height;
+                                    // Convert device pixels to CSS pixels
+                                    const canvasWidth = canvas.width / dpr;
+                                    const canvasHeight = canvas.height / dpr;
                                     
                                     // Skip if dimensions are invalid
                                     if (availableWidth === 0 || availableHeight === 0 || canvasWidth === 0 || canvasHeight === 0) {
@@ -431,8 +435,9 @@ function draw() {
                                     document.documentElement.style.setProperty('--p5-scale', scale);
                                 } else {
                                     // In normal mode, adjust wrapper to match scaled canvas
-                                    wrapper.style.width = (canvas.width * scale) + 'px';
-                                    wrapper.style.height = (canvas.height * scale) + 'px';
+                                    // Convert device pixels to CSS pixels
+                                    wrapper.style.width = (canvas.width / dpr * scale) + 'px';
+                                    wrapper.style.height = (canvas.height / dpr * scale) + 'px';
                                 }
                             }
                         };
