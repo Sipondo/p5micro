@@ -411,8 +411,10 @@ function draw() {
                                     // In view mode, calculate scale to fill available space
                                     const availableWidth = wrapper.parentElement.clientWidth;
                                     const availableHeight = wrapper.parentElement.clientHeight;
-                                    const canvasWidth = canvas.width;
-                                    const canvasHeight = canvas.height;
+                                    // Use actual displayed dimensions
+                                    const canvasRect = canvas.getBoundingClientRect();
+                                    const canvasWidth = canvasRect.width;
+                                    const canvasHeight = canvasRect.height;
                                     
                                     // Skip if dimensions are invalid
                                     if (availableWidth === 0 || availableHeight === 0 || canvasWidth === 0 || canvasHeight === 0) {
