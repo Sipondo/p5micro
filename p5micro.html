@@ -365,9 +365,9 @@ function draw() {
                     } else if (prop === 'mouseY') {
                         originalSetProperty.call(this, prop, value / scale);
                     } else if (prop === 'pmouseX') {
-                        originalSetProperty.call(this, prop, value / scale);
+                        originalSetProperty.call(this, prop, value);// / scale);
                     } else if (prop === 'pmouseY') {
-                        originalSetProperty.call(this, prop, value / scale);
+                        originalSetProperty.call(this, prop, value);// / scale);
                     } else {
                         originalSetProperty.call(this, prop, value);
                     }
