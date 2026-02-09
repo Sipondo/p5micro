@@ -377,12 +377,22 @@ function draw() {
                     const wrappedCode = `
                         with (p) {
                             ${userCode}
+                            if (typeof preload !== 'undefined') p.preload = preload;
                             if (typeof setup !== 'undefined') p.setup = setup;
                             if (typeof draw !== 'undefined') p.draw = draw;
                             if (typeof mousePressed !== 'undefined') p.mousePressed = mousePressed;
-                            if (typeof keyPressed !== 'undefined') p.keyPressed = keyPressed;
+                            if (typeof mouseReleased !== 'undefined') p.mouseReleased = mouseReleased;
                             if (typeof mouseMoved !== 'undefined') p.mouseMoved = mouseMoved;
+                            if (typeof mouseDragged !== 'undefined') p.mouseDragged = mouseDragged;
                             if (typeof mouseClicked !== 'undefined') p.mouseClicked = mouseClicked;
+                            if (typeof mouseWheel !== 'undefined') p.mouseWheel = mouseWheel;
+                            if (typeof keyPressed !== 'undefined') p.keyPressed = keyPressed;
+                            if (typeof keyReleased !== 'undefined') p.keyReleased = keyReleased;
+                            if (typeof keyTyped !== 'undefined') p.keyTyped = keyTyped;
+                            if (typeof touchStarted !== 'undefined') p.touchStarted = touchStarted;
+                            if (typeof touchMoved !== 'undefined') p.touchMoved = touchMoved;
+                            if (typeof touchEnded !== 'undefined') p.touchEnded = touchEnded;
+                            if (typeof windowResized !== 'undefined') p.windowResized = windowResized;
                         }
                     `;
                     
